@@ -1,6 +1,6 @@
 {
   "name": "wcs-kanban-board",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A vanilla Web Component Kanban board project",
   "main": "src/main.js",
   "type": "module",
@@ -31,18 +31,55 @@
   },
   "changelog": {
     "types": {
-      "feat": { "label": "✨ Features", "section": "Added" },
-      "fix": { "label": "🐛 Bug Fixes", "section": "Fixed" },
-      "docs": { "label": "📚 Documentation", "section": "Documentation" },
-      "style": { "label": "💄 Styles", "section": "Changed" },
-      "refactor": { "label": "♻️ Code Refactoring", "section": "Changed" },
-      "perf": { "label": "⚡ Performance Improvements", "section": "Changed" },
-      "test": { "label": "✅ Tests", "section": "Added" },
-      "build": { "label": "🔧 Build System", "section": "Changed" },
-      "ci": { "label": "👷 CI", "section": "Changed" },
-      "chore": { "label": "🔨 Chores", "section": "Changed" }
+      "feat": {
+        "label": "✨ Features",
+        "section": "Added"
+      },
+      "fix": {
+        "label": "🐛 Bug Fixes",
+        "section": "Fixed"
+      },
+      "docs": {
+        "label": "📚 Documentation",
+        "section": "Documentation"
+      },
+      "style": {
+        "label": "💄 Styles",
+        "section": "Changed"
+      },
+      "refactor": {
+        "label": "♻️ Code Refactoring",
+        "section": "Changed"
+      },
+      "perf": {
+        "label": "⚡ Performance Improvements",
+        "section": "Changed"
+      },
+      "test": {
+        "label": "✅ Tests",
+        "section": "Added"
+      },
+      "build": {
+        "label": "🔧 Build System",
+        "section": "Changed"
+      },
+      "ci": {
+        "label": "👷 CI",
+        "section": "Changed"
+      },
+      "chore": {
+        "label": "🔨 Chores",
+        "section": "Changed"
+      }
     },
-    "skipTypes": ["build", "ci", "chore"],
-    "breakingChangeKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
+    "skipTypes": [
+      "build",
+      "ci",
+      "chore"
+    ],
+    "breakingChangeKeywords": [
+      "BREAKING CHANGE",
+      "BREAKING CHANGES"
+    ]
   }
 }
