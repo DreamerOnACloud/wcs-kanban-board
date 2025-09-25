@@ -3,10 +3,18 @@
   "version": "1.0.0",
   "description": "A vanilla Web Component Kanban board project",
   "main": "src/main.js",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "changelog": "node scripts/changelog.js",
+    "changelog:dry": "node scripts/changelog.js --dry-run",
+    "changelog:init": "node scripts/changelog.js --init",
+    "version": "npm run changelog && git add CHANGELOG.md",
+    "release": "npm version patch && npm run build",
+    "release:minor": "npm version minor && npm run build",
+    "release:major": "npm version major && npm run build"
   },
   "keywords": [
     "web-components",
@@ -20,5 +28,21 @@
   "license": "MIT",
   "devDependencies": {
     "vite": "^5.0.0"
+  },
+  "changelog": {
+    "types": {
+      "feat": { "label": "✨ Features", "section": "Added" },
+      "fix": { "label": "🐛 Bug Fixes", "section": "Fixed" },
+      "docs": { "label": "📚 Documentation", "section": "Documentation" },
+      "style": { "label": "💄 Styles", "section": "Changed" },
+      "refactor": { "label": "♻️ Code Refactoring", "section": "Changed" },
+      "perf": { "label": "⚡ Performance Improvements", "section": "Changed" },
+      "test": { "label": "✅ Tests", "section": "Added" },
+      "build": { "label": "🔧 Build System", "section": "Changed" },
+      "ci": { "label": "👷 CI", "section": "Changed" },
+      "chore": { "label": "🔨 Chores", "section": "Changed" }
+    },
+    "skipTypes": ["build", "ci", "chore"],
+    "breakingChangeKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
   }
 }

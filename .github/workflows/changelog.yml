@@ -1,0 +1,107 @@
+name: Update Changelog
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to generate changelog for'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Make changelog script executable
+        run: chmod +x scripts/changelog.js
+      
+      - name: Generate changelog
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            npm run changelog -- --version "${{ github.event.inputs.version }}"
+          else
+            npm run changelog
+          fi
+      
+      - name: Commit changelog
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add CHANGELOG.md
+            git commit -m "docs: update changelog for $(node -p "require('./package.json').version")"
+            git push origin HEAD:main
+          else
+            echo "No changes to commit"
+          fi
+      
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body_path: .github/release-notes.md
+          draft: false
+          prerelease: false
+
+  generate-release-notes:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Extract release notes
+        run: |
+          # Extract the latest changelog section
+          VERSION=$(echo ${{ github.ref }} | sed 's/refs\/tags\/v//')
+          
+          # Create release notes from changelog
+          awk "/## \[${VERSION}\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md > .github/release-notes.md
+          
+          # Fallback if changelog section not found
+          if [ ! -s .github/release-notes.md ]; then
+            echo "Release notes for version ${VERSION}" > .github/release-notes.md
+            echo "" >> .github/release-notes.md
+            echo "This release includes various improvements and bug fixes." >> .github/release-notes.md
+          fi
+      
+      - name: Upload release notes
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-notes
+          path: .github/release-notes.md
