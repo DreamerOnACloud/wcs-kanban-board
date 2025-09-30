@@ -19,9 +19,9 @@
   - [x] Remove lists
   - [x] Default list titles
 - [ ] Card Management
-  - [ ] Add cards to lists
+  - [x] Add cards to lists
   - [ ] Edit card titles
-  - [ ] Remove cards
+  - [x] Remove cards
 
 ### Drag & Drop - v1.2.0
 
