@@ -1,6 +1,6 @@
 {
   "name": "wcs-kanban-board",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "A vanilla Web Component Kanban board project",
   "main": "src/main.js",
   "type": "module",
@@ -11,10 +11,9 @@
     "changelog": "node scripts/changelog.js",
     "changelog:dry": "node scripts/changelog.js --dry-run",
     "changelog:init": "node scripts/changelog.js --init",
-    "version": "npm run changelog && git add CHANGELOG.md",
-    "release": "npm version patch && npm run build",
-    "release:minor": "npm version minor && npm run build",
-    "release:major": "npm version major && npm run build"
+    "release": "node scripts/release.js patch",
+    "release:minor": "node scripts/release.js minor",
+    "release:major": "node scripts/release.js major"
   },
   "keywords": [
     "web-components",

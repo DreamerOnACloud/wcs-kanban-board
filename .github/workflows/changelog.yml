@@ -16,9 +16,9 @@ permissions:
   pull-requests: write
 
 jobs:
-  changelog:
+  generate-release-notes:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,20 +40,71 @@ jobs:
       
       - name: Generate changelog
         run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.version }}" ]]; then
+            echo "Manual run with version: ${{ github.event.inputs.version }}"
             npm run changelog -- --version "${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "Tag-based release: ${{ github.ref }}"
+            VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\/v//')
+            echo "Detected version: $VERSION"
+            npm run changelog -- --force --version "$VERSION"
           else
-            npm run changelog
+            echo "Standard changelog update"
+            npm run changelog -- --force
           fi
+      
+      - name: Extract release notes
+        run: |
+          # Extract the latest changelog section
+          VERSION=$(echo ${{ github.ref }} | sed 's/refs\/tags\/v//')
+          mkdir -p .github
+          # Create release notes from changelog
+          awk "/## \[${VERSION}\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md > .github/release-notes.md
+          
+          # Fallback if changelog section not found
+          if [ ! -s .github/release-notes.md ]; then
+            echo "Release notes for version ${VERSION}" > .github/release-notes.md
+            echo "" >> .github/release-notes.md
+            echo "This release includes various improvements and bug fixes." >> .github/release-notes.md
+          fi
+      
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: .github/release-notes.md
+          retention-days: 1
+
+  changelog:
+    needs: generate-release-notes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Download release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: .github
       
       - name: Commit changelog
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
+          # Create and switch to temporary branch from current HEAD
+          git checkout -b temp-changelog-update
+          
+          # Check if there are any changes to commit
+          git add CHANGELOG.md scripts/changelog.js .github/release-notes.md
           if [ -n "$(git status --porcelain)" ]; then
-            git add CHANGELOG.md
             git commit -m "docs: update changelog for $(node -p "require('./package.json').version")"
+            # Push to main branch
             git push origin HEAD:main
           else
             echo "No changes to commit"
@@ -71,37 +122,3 @@ jobs:
           draft: false
           prerelease: false
 
-  generate-release-notes:
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      
-      - name: Extract release notes
-        run: |
-          # Extract the latest changelog section
-          VERSION=$(echo ${{ github.ref }} | sed 's/refs\/tags\/v//')
-          
-          # Create release notes from changelog
-          awk "/## \[${VERSION}\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md > .github/release-notes.md
-          
-          # Fallback if changelog section not found
-          if [ ! -s .github/release-notes.md ]; then
-            echo "Release notes for version ${VERSION}" > .github/release-notes.md
-            echo "" >> .github/release-notes.md
-            echo "This release includes various improvements and bug fixes." >> .github/release-notes.md
-          fi
-      
-      - name: Upload release notes
-        uses: actions/upload-artifact@v3
-        with:
-          name: release-notes
-          path: .github/release-notes.md

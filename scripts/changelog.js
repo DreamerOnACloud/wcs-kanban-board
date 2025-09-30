@@ -174,9 +174,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     return header;
   }
 
+  checkTagExists(version) {
+    try {
+      execSync(`git rev-parse v${version}`, { stdio: 'ignore' });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   generate(options = {}) {
     const { version = this.getCurrentVersion(), dry = false, debug = false } = options;
     
+    // Check if tag exists before proceeding
+    if (!dry && !force && this.checkTagExists(version)) {
+      console.error(`❌ Error: Tag v${version} already exists`);
+      process.exit(1);
+    }
+
     console.log(`📝 Generating changelog for version ${version}...`);
 
     // Initialize changelog if it doesn't exist
@@ -279,10 +294,14 @@ const version = args.includes('-v') ? args[args.indexOf('-v') + 1] :
 
 const dryRun = args.includes('--dry-run') || args.includes('-d');
 const debug = args.includes('--debug');
+const force = args.includes('--force');
 
 try {
+
   generator.generate({ version, dry: dryRun, debug });
 } catch (error) {
+  const originalVersion = generator.getCurrentVersion();
+  generator.restorePackageVersion(originalVersion);
   console.error('❌ Error generating changelog:', error.message);
   if (debug) {
     console.error('Stack trace:', error.stack);
