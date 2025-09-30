@@ -29,6 +29,12 @@ export class WcsKanbanBoard extends HTMLElement {
     list.setAttribute('title', 'New List');
     this.shadowRoot.querySelector('#lists').appendChild(list);
   }
+
+  removeList(list) {
+    if (list && list.parentNode) {
+      list.parentNode.removeChild(list);
+    }
+  }
 }
 
 customElements.define('wcs-kanban-board', WcsKanbanBoard);

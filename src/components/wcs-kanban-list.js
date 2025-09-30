@@ -17,9 +17,31 @@ export class WcsKanbanList extends HTMLElement {
           padding: 0.5rem;
           width: 200px;
         }
-        h3 { margin: 0 0 0.5rem 0; }
+        .list-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.5rem;
+        }
+        h3 { 
+          margin: 0;
+        }
+        .remove-list {
+          padding: 4px 8px;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          color: #666;
+          font-weight: bold;
+        }
+        .remove-list:hover {
+          color: #ff4444;
+        }
       </style>
-      <h3>${title}</h3>
+      <div class="list-header">
+        <h3>${title}</h3>
+        <button class="remove-list" title="Remove List">Χ</button>
+      </div>
       <div id="cards"></div>
       <button id="add-card">+ Add Card</button>
     `;
@@ -27,6 +49,10 @@ export class WcsKanbanList extends HTMLElement {
     this.shadowRoot
       .querySelector('#add-card')
       .addEventListener('click', () => this.addCard());
+
+    this.shadowRoot
+      .querySelector('.remove-list')
+      .addEventListener('click', () => this.remove());
   }
 
   addCard() {
