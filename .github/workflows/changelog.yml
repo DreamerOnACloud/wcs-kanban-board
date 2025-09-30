@@ -100,8 +100,8 @@ jobs:
           # Create and switch to temporary branch from current HEAD
           git checkout -b temp-changelog-update
           
-          # Check if there are any changes to commit
-          git add CHANGELOG.md scripts/changelog.js .github/release-notes.md
+          # Check if there are any changes to commit (excluding release-notes.md)
+          git add CHANGELOG.md scripts/changelog.js
           if [ -n "$(git status --porcelain)" ]; then
             git commit -m "docs: update changelog for $(node -p "require('./package.json').version")"
             # Push to main branch

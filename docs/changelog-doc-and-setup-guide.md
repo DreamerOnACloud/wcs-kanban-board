@@ -41,6 +41,7 @@ npm run changelog:init
 This creates an empty `CHANGELOG.md` file with the proper header.
 
 ### Commit Current Changes
+
 ```bash
 # Stage all the new files
 git add .
@@ -50,6 +51,7 @@ git commit -m "<type>[optional scope]: <description>"
 ```
 
 ### Generate First Changelog Entry
+
 ```bash
 # Preview what the changelog will look like
 npm run changelog:dry
@@ -59,7 +61,9 @@ npm run changelog
 ```
 
 ### Create First Release
+
 Now create your first tagged release:
+
 ```bash
 # Option A: Use the automated release script (recommended)
 npm run release
@@ -71,7 +75,9 @@ git push origin --tags
 ```
 
 ### Verify Everything Works
+
 Check that everything was created correctly:
+
 ```bash
 # Verify changelog was generated
 cat CHANGELOG.md
@@ -209,11 +215,25 @@ The GitHub Actions workflow will:
 1. **Automatically generate changelog** when you push a version tag
 2. **Create GitHub releases** with changelog content
 3. **Update the main branch** with the new changelog
+4. **Generate release notes** from the latest changelog section
 
-To trigger manually:
+### Automatic Workflow
+
+When you run any of the release commands (`npm run release`, `npm run release:minor`, `npm run release:major`), the workflow will:
+
+1. Generate/update the changelog
+2. Extract release notes for the new version
+3. Create a GitHub release with those notes
+4. Commit any changelog changes back to main
+
+### Manual Trigger
+
+To trigger the workflow manually:
+
 - Go to Actions tab in your GitHub repository
 - Select "Update Changelog" workflow
 - Click "Run workflow"
+- Optionally specify a version number
 
 ## Best Practices
 
@@ -227,18 +247,22 @@ To trigger manually:
 ## Troubleshooting
 
 ### No commits found
+
 - Ensure you have git tags for previous releases
 - Check that commits exist since the last tag
 
 ### Wrong categorization
+
 - Verify commit message format follows conventional commits
 - Check the `types` configuration in `package.json`
 
 ### Missing changes
+
 - Ensure commit types aren't in the `skipTypes` array
 - Verify git repository has the expected commit history
 
 ### Script permissions
+
 ```bash
 chmod +x scripts/changelog.js
 ```
@@ -251,6 +275,7 @@ You can always manually edit `CHANGELOG.md` if needed. The script will preserve 
 ## ✅ Verification Checklist
 
 After setup, verify:
+
 - [ ] `scripts/changelog.js` exists and is executable
 - [ ] `package.json` has the new scripts
 - [ ] `CHANGELOG.md` was created with proper header
@@ -322,9 +347,11 @@ git push origin --tags
 
 ## 🚨 Important Notes
 
-### Commit Message Format
+### Commit Format Details
+
 Always use the conventional commit format:
-```
+
+```text
 <type>[optional scope]: <description>
 
 [optional body]
