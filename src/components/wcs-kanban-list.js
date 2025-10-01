@@ -1,3 +1,14 @@
+/**
+ * Implementation of List Drop Zones from roadmap v1.2.0:
+ * - Handle dragover and drop events
+ * - Visual feedback for valid drop targets
+ * - Smooth transitions for hover states
+ * 
+ * Also implements DOM Integration:
+ * - Handle Shadow DOM boundaries
+ * - Maintain card state during moves
+ * - Update parent-child relationships
+ */
 export class WcsKanbanList extends HTMLElement {
   constructor() {
     super();
@@ -16,6 +27,12 @@ export class WcsKanbanList extends HTMLElement {
           border-radius: 8px;
           padding: 0.5rem;
           width: 200px;
+          transition: background-color 0.2s ease;
+        }
+        :host(.drag-over) {
+          background: #e4e4e4;
+          outline: 2px dashed #666;
+          outline-offset: -2px;
         }
         .list-header {
           display: flex;
@@ -53,6 +70,27 @@ export class WcsKanbanList extends HTMLElement {
     this.shadowRoot
       .querySelector('.remove-list')
       .addEventListener('click', () => this.remove());
+      
+    // [List Drop Zones] Handle dragover and drop events
+    this.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      this.classList.add('drag-over');  // [List Drop Zones] Visual feedback
+      e.dataTransfer.dropEffect = 'move';
+    });
+
+    this.addEventListener('dragleave', () => {
+      this.classList.remove('drag-over');  // [List Drop Zones] Visual feedback
+    });
+
+    this.addEventListener('drop', (e) => {
+      e.preventDefault();
+      this.classList.remove('drag-over');
+      
+      if (window._draggedCard) {  // [DOM Integration] Handle Shadow DOM boundaries
+        const cardsContainer = this.shadowRoot.querySelector('#cards');
+        cardsContainer.appendChild(window._draggedCard);  // [DOM Integration] Update parent-child relationships
+      }
+    });
   }
 
   addCard() {

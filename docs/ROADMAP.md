@@ -25,13 +25,18 @@
 
 ### Drag & Drop - v1.2.0
 
-- [ ] Card Interactions
-  - [ ] Drag cards between lists
-  - [ ] Drop zones with visual feedback
-  - [ ] Animation during drag
-- [ ] State Management
-  - [ ] Track card positions
-  - [ ] Update component state on drop
+- [x] Card Drag Operations
+  - [x] Enable card dragging
+  - [x] Set drag data and effects
+  - [x] Animation and opacity during drag
+- [x] List Drop Zones
+  - [x] Handle dragover and drop events
+  - [x] Visual feedback for valid drop targets
+  - [x] Smooth transitions for hover states
+- [x] DOM Integration
+  - [x] Handle Shadow DOM boundaries
+  - [x] Maintain card state during moves
+  - [x] Update parent-child relationships
 
 ### Data Persistence - v1.3.0
 

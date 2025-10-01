@@ -1,3 +1,9 @@
+/**
+ * Implementation of Card Drag Operations from roadmap v1.2.0:
+ * - Enable card dragging: Using HTML5 draggable attribute
+ * - Set drag data and effects: Using dataTransfer API
+ * - Animation and opacity during drag: Using CSS transitions
+ */
 export class WcsKanbanCard extends HTMLElement {
   constructor() {
     super();
@@ -6,6 +12,24 @@ export class WcsKanbanCard extends HTMLElement {
 
     connectedCallback() {
       const title = this.getAttribute('title') || 'New Task';
+      this.draggable = true; // [Card Drag Operations] Enable dragging
+      
+      // [Card Drag Operations] Enable dragging and visual feedback
+      this.addEventListener('dragstart', (e) => {
+        window._draggedCard = this;  // [DOM Integration] Handle Shadow DOM boundaries
+        this.style.opacity = '0.4';  // [Card Drag Operations] Animation during drag
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';  // [Card Drag Operations] Set drag effect
+      });
+
+      this.addEventListener('dragend', () => {
+        this.style.opacity = '';  // [Card Drag Operations] Reset animation
+        this.classList.remove('dragging');
+        document.querySelectorAll('wcs-kanban-list').forEach(list => {
+          list.classList.remove('drag-over');  // [List Drop Zones] Clean up visual feedback
+        });
+        window._draggedCard = null;  // [DOM Integration] Clean up reference
+      });
 
       this.shadowRoot.innerHTML = `
         <style>
@@ -17,6 +41,12 @@ export class WcsKanbanCard extends HTMLElement {
             margin-bottom: 0.5rem;
             cursor: grab;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+          }
+          :host(.dragging) {
+            opacity: 0.5;
+            transform: scale(1.02);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
           }
           .card-header {
             display: flex;
