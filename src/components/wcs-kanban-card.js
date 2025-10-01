@@ -29,6 +29,7 @@ export class WcsKanbanCard extends HTMLElement {
           list.classList.remove('drag-over');  // [List Drop Zones] Clean up visual feedback
         });
         window._draggedCard = null;  // [DOM Integration] Clean up reference
+        this.notifyStateChange(); // Save state after card is moved
       });
 
       this.shadowRoot.innerHTML = `
@@ -95,6 +96,7 @@ export class WcsKanbanCard extends HTMLElement {
         const newTitle = titleElement.textContent.trim();
         if (newTitle) {
           this.setAttribute('title', newTitle);
+          this.notifyStateChange();
         } else {
           titleElement.textContent = this.getAttribute('title') || 'New Task';
         }
@@ -117,7 +119,16 @@ export class WcsKanbanCard extends HTMLElement {
         .addEventListener('click', (e) => {
           e.stopPropagation(); // Prevent dragging when clicking remove
           this.remove();
+          this.notifyStateChange();
         });
+  }
+
+  notifyStateChange() {
+    // Find parent board and trigger state save
+    const board = this.closest('wcs-kanban-board');
+    if (board && board.saveState) {
+      requestAnimationFrame(() => board.saveState()); // Delay save to ensure DOM is updated
+    }
   }
 }
 

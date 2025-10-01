@@ -10,13 +10,32 @@
  * - Update parent-child relationships
  */
 export class WcsKanbanList extends HTMLElement {
+  static get observedAttributes() {
+    return ['title'];
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+
+    // Track original title for Escape handling
+    this._originalTitle = '';
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'title' && this.shadowRoot) {
+      const titleElement = this.shadowRoot.querySelector('.list-title');
+      if (titleElement) {
+        titleElement.textContent = newValue || 'New List';
+      }
+    }
   }
 
   connectedCallback() {
-    const title = this.getAttribute('title') || 'New List';
+    if (!this.hasAttribute('title')) {
+      this.setAttribute('title', 'New List');
+    }
+    const title = this.getAttribute('title');
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -40,8 +59,22 @@ export class WcsKanbanList extends HTMLElement {
           align-items: center;
           margin-bottom: 0.5rem;
         }
-        h3 { 
+        .list-title {
           margin: 0;
+          padding: 2px 4px;
+          border-radius: 3px;
+          font-size: 1.17em;
+          font-weight: bold;
+          min-width: 50px;
+        }
+        .list-title:hover {
+          background: #e0e0e0;
+          cursor: text;
+        }
+        .list-title:focus {
+          background: #fff;
+          outline: 2px solid #0066cc;
+          cursor: text;
         }
         .remove-list {
           padding: 4px 8px;
@@ -56,12 +89,45 @@ export class WcsKanbanList extends HTMLElement {
         }
       </style>
       <div class="list-header">
-        <h3>${title}</h3>
-        <button class="remove-list" title="Remove List">Χ</button>
+        <div class="list-title" contenteditable="true">${title}</div>
+        <button class="remove-list" title="Remove List">×</button>
       </div>
       <div id="cards"></div>
       <button id="add-card">+ Add Card</button>
     `;
+
+    // Store initial title
+    this._originalTitle = title;
+
+    // Set up title editing
+    const titleElement = this.shadowRoot.querySelector('.list-title');
+    
+    titleElement.addEventListener('focus', () => {
+      this._originalTitle = this.getAttribute('title') || 'New List';
+    });
+
+    titleElement.addEventListener('blur', () => {
+      let newTitle = titleElement.textContent.trim();
+      if (!newTitle) {
+        newTitle = this.getAttribute('title') || 'New List';
+      }
+      // Always update both attribute and content
+      this.setAttribute('title', newTitle);
+      titleElement.textContent = newTitle;
+      // Notify board of state change
+      this.notifyStateChange();
+    });
+
+    titleElement.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        titleElement.blur();
+      }
+      if (e.key === 'Escape') {
+        titleElement.textContent = this._originalTitle;
+        titleElement.blur();
+      }
+    });
 
     this.shadowRoot
       .querySelector('#add-card')
@@ -69,7 +135,12 @@ export class WcsKanbanList extends HTMLElement {
 
     this.shadowRoot
       .querySelector('.remove-list')
-      .addEventListener('click', () => this.remove());
+      .addEventListener('click', () => {
+        const board = this.closest('wcs-kanban-board');
+        if (board && board.removeList) {
+          board.removeList(this);
+        }
+      });
       
     // [List Drop Zones] Handle dragover and drop events
     this.addEventListener('dragover', (e) => {
@@ -89,14 +160,29 @@ export class WcsKanbanList extends HTMLElement {
       if (window._draggedCard) {  // [DOM Integration] Handle Shadow DOM boundaries
         const cardsContainer = this.shadowRoot.querySelector('#cards');
         cardsContainer.appendChild(window._draggedCard);  // [DOM Integration] Update parent-child relationships
+        this.notifyStateChange();  // Save state after card is dropped
       }
     });
   }
 
   addCard() {
     const card = document.createElement('wcs-kanban-card');
+    card.setAttribute('id', this.generateId());
     card.setAttribute('title', 'New Task');
     this.shadowRoot.querySelector('#cards').appendChild(card);
+    this.notifyStateChange();
+  }
+
+  generateId() {
+    return Math.random().toString(36).substring(2, 15);
+  }
+
+  notifyStateChange() {
+    // Find parent board and trigger state save
+    const board = this.closest('wcs-kanban-board');
+    if (board && board.saveState) {
+      board.saveState();
+    }
   }
 }
 
