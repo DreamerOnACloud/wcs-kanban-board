@@ -9,6 +9,8 @@
  * - Maintain card state during moves
  * - Update parent-child relationships
  */
+import { debugLog, findParentBoard, generateId } from '../utils.js';
+
 export class WcsKanbanList extends HTMLElement {
   static get observedAttributes() {
     return ['title'];
@@ -23,10 +25,12 @@ export class WcsKanbanList extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'title' && this.shadowRoot) {
+    if (name === 'title' && this.shadowRoot && oldValue !== newValue) {
+      console.log('List attribute changed:', oldValue, '->', newValue);
       const titleElement = this.shadowRoot.querySelector('.list-title');
       if (titleElement) {
         titleElement.textContent = newValue || 'New List';
+        console.log('Updated title element to:', titleElement.textContent);
       }
     }
   }
@@ -107,15 +111,35 @@ export class WcsKanbanList extends HTMLElement {
     });
 
     titleElement.addEventListener('blur', () => {
-      let newTitle = titleElement.textContent.trim();
-      if (!newTitle) {
-        newTitle = this.getAttribute('title') || 'New List';
+      const oldTitle = this.getAttribute('title');
+      const newTitle = titleElement.textContent.trim() || 'New List';
+      
+      console.log(`Title blur event for list ${this.getAttribute('id')}:`, {
+        oldTitle,
+        newTitle,
+        elementContent: titleElement.textContent,
+        listElement: this.tagName,
+        parentElement: this.parentNode ? this.parentNode.tagName : 'none'
+      });
+      
+      // Ensure consistent state
+      if (titleElement.textContent !== newTitle) {
+        console.log('Normalizing title element content');
+        titleElement.textContent = newTitle;
       }
-      // Always update both attribute and content
-      this.setAttribute('title', newTitle);
-      titleElement.textContent = newTitle;
-      // Notify board of state change
-      this.notifyStateChange();
+      
+      // Update attribute and notify changes
+      if (oldTitle !== newTitle) {
+        console.log('Title changed, updating attribute and notifying state');
+        // Update attribute first
+        this.setAttribute('title', newTitle);
+        
+        // Use requestAnimationFrame to ensure DOM is updated
+        requestAnimationFrame(() => {
+          console.log('Triggering state change notification');
+          this.notifyStateChange();
+        });
+      }
     });
 
     titleElement.addEventListener('keydown', (e) => {
@@ -174,15 +198,22 @@ export class WcsKanbanList extends HTMLElement {
   }
 
   generateId() {
-    return Math.random().toString(36).substring(2, 15);
+    return generateId();
   }
 
   notifyStateChange() {
-    // Find parent board and trigger state save
-    const board = this.closest('wcs-kanban-board');
-    if (board && board.saveState) {
-      board.saveState();
+    debugLog('State change notification for list:', this.getAttribute('id'));
+    
+    const board = findParentBoard(this);
+    if (!board) {
+      console.error('Could not find board component!');
+      return;
     }
+
+    // Queue state save after DOM updates
+    requestAnimationFrame(() => {
+      board.saveState();
+    });
   }
 }
 

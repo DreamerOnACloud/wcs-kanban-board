@@ -15,6 +15,8 @@
  *   ]
  * }
  */
+import { debugLog, generateId, saveBoardState, loadBoardState, clearBoardState } from '../utils.js';
+
 export class WcsKanbanBoard extends HTMLElement {
   constructor() {
     super();
@@ -98,19 +100,15 @@ export class WcsKanbanBoard extends HTMLElement {
    */
   clearState() {
     try {
-      // Clear localStorage first
-      localStorage.removeItem('wcs-kanban-state');
-      
-      // Reset state
+      // Clear storage and state
+      clearBoardState();
       this.state = { lists: [] };
       
       // Clear DOM
       const listsContainer = this.shadowRoot.querySelector('#lists');
-      while (listsContainer.firstChild) {
-        listsContainer.removeChild(listsContainer.firstChild);
-      }
-
-      // Force a save of the empty state
+      listsContainer.innerHTML = '';
+      
+      // Ensure empty state is saved
       this.saveState();
     } catch (err) {
       console.error('Failed to clear board state:', err);
@@ -122,7 +120,7 @@ export class WcsKanbanBoard extends HTMLElement {
    * @returns {string} Unique ID
    */
   generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return generateId();
   }
 
   /**
@@ -130,19 +128,35 @@ export class WcsKanbanBoard extends HTMLElement {
    */
   saveState() {
     try {
-      const state = {
-        lists: Array.from(this.shadowRoot.querySelectorAll('wcs-kanban-list')).map(list => ({
-          id: list.getAttribute('id') || this.generateId(),
-          title: list.getAttribute('title') || 'New List',
-          cards: Array.from(list.shadowRoot.querySelectorAll('wcs-kanban-card')).map(card => ({
-            id: card.getAttribute('id') || this.generateId(),
-            title: card.getAttribute('title') || 'New Task'
-          }))
-        }))
-      };
+      debugLog('Saving board state');
       
-      localStorage.setItem('wcs-kanban-state', JSON.stringify(state));
-      this.state = state;
+      // Get current lists state
+      const lists = Array.from(this.shadowRoot.querySelector('#lists').children)
+        .filter(el => el.tagName.toLowerCase() === 'wcs-kanban-list')
+        .map(list => {
+          const titleElement = list.shadowRoot.querySelector('.list-title');
+          const currentTitle = titleElement?.textContent.trim() || 'New List';
+          
+          // Sync title attribute if needed
+          if (currentTitle !== list.getAttribute('title')) {
+            list.setAttribute('title', currentTitle);
+          }
+          
+          return {
+            id: list.getAttribute('id') || generateId(),
+            title: currentTitle,
+            cards: Array.from(list.shadowRoot.querySelectorAll('wcs-kanban-card'))
+              .map(card => ({
+                id: card.getAttribute('id') || generateId(),
+                title: card.getAttribute('title') || 'New Task'
+              }))
+          };
+        });
+      
+      // Update and save state
+      this.state = { lists };
+      saveBoardState(this.state);
+      
     } catch (err) {
       console.error('Failed to save board state:', err);
     }
@@ -153,10 +167,9 @@ export class WcsKanbanBoard extends HTMLElement {
    */
   loadState() {
     try {
-      const savedState = localStorage.getItem('wcs-kanban-state');
-      if (!savedState) return;
-
-      const state = JSON.parse(savedState);
+      const state = loadBoardState();
+      if (!state || !state.lists) return;
+      
       this.state = state;
 
       // Clear existing lists
@@ -165,9 +178,20 @@ export class WcsKanbanBoard extends HTMLElement {
 
       // Create all lists first
       const lists = state.lists.map(listData => {
+        console.log('LOAD - Creating list from stored data:', listData);
         const list = document.createElement('wcs-kanban-list');
-        list.setAttribute('id', listData.id);
-        list.setAttribute('title', listData.title || 'New List');
+        
+        // Create with guaranteed values
+        const id = listData.id || this.generateId();
+        const title = listData.title || 'New List';
+        
+        // Set properties in order
+        list.setAttribute('id', id);
+        list.setAttribute('title', title);
+        
+        // Verify the list was created correctly
+        console.log(`LOAD - List ${id} created with title:`, list.getAttribute('title'));
+        
         return { list, cards: listData.cards };
       });
 
