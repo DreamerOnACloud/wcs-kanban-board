@@ -79,7 +79,14 @@ export class WcsKanbanCard extends HTMLElement {
           transition: min-height 0.2s ease;
         }
         .card-description:empty {
-          display: none;
+          min-height: 1.5rem;
+          display: block;
+        }
+        .modal-trigger {
+          cursor: pointer;
+        }
+        .modal-trigger:hover {
+          background: rgba(0,0,0,0.02);
         }
         .remove-card {
           padding: 2px 6px;
@@ -95,11 +102,13 @@ export class WcsKanbanCard extends HTMLElement {
           color: #ff4444;
         }
       </style>
-      <div class="card-header">
-        <div class="card-title" contenteditable="true">${title}</div>
-        <button class="remove-card" title="Remove Card">×</button>
+      <div class="card-content">
+        <div class="card-header">
+          <div class="card-title" contenteditable="true">${title}</div>
+          <button class="remove-card" title="Remove Card">×</button>
+        </div>
+        <div class="card-description modal-trigger"></div>
       </div>
-      <div class="card-description"></div>
     `;
 
     // 3. Add modal to shadow DOM
@@ -174,11 +183,10 @@ export class WcsKanbanCard extends HTMLElement {
   }
 
   setupModalHandling() {
-    this.addEventListener('click', (e) => {
-      if (!e.target.closest('.remove-card')) {
-        const description = this.getAttribute('description') || '';
-        this.modal.open(description);
-      }
+    // Only trigger modal on clicking description area
+    this.shadowRoot.querySelector('.modal-trigger').addEventListener('click', () => {
+      const description = this.getAttribute('description') || '';
+      this.modal.open(description);
     });
 
     this.modal.addEventListener('save', (e) => {
