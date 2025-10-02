@@ -7,9 +7,19 @@
 import { debugLog, findParentBoard } from '../utils.js';
 
 export class WcsKanbanCard extends HTMLElement {
+  static get observedAttributes() {
+    return ['title', 'description'];
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'description' && oldValue !== newValue) {
+      this.updateDescriptionPreview(newValue);
+    }
   }
 
   connectedCallback() {
@@ -56,6 +66,21 @@ export class WcsKanbanCard extends HTMLElement {
           outline: 2px solid #0066cc;
           cursor: text;
         }
+        .card-description {
+          margin-top: 0.5rem;
+          font-size: 0.875rem;
+          color: #666;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          line-height: 1.4;
+          min-height: 0;
+          transition: min-height 0.2s ease;
+        }
+        .card-description:empty {
+          display: none;
+        }
         .remove-card {
           padding: 2px 6px;
           background: transparent;
@@ -74,6 +99,7 @@ export class WcsKanbanCard extends HTMLElement {
         <div class="card-title" contenteditable="true">${title}</div>
         <button class="remove-card" title="Remove Card">×</button>
       </div>
+      <div class="card-description"></div>
     `;
 
     // 3. Add modal to shadow DOM
@@ -157,12 +183,28 @@ export class WcsKanbanCard extends HTMLElement {
 
     this.modal.addEventListener('save', (e) => {
       this.setAttribute('description', e.detail.description);
+      this.updateDescriptionPreview(e.detail.description);
       // Close modal after saving description
       if (e.detail.closeModal) {
         this.modal.close();
       }
       this.notifyStateChange();
     });
+
+    // Initialize description preview if exists
+    const initialDescription = this.getAttribute('description');
+    if (initialDescription) {
+      this.updateDescriptionPreview(initialDescription);
+    }
+  }
+
+  updateDescriptionPreview(description) {
+    const previewEl = this.shadowRoot.querySelector('.card-description');
+    if (description && description.trim()) {
+      previewEl.textContent = description;
+    } else {
+      previewEl.textContent = '';
+    }
   }
 
   setupRemoveButton() {
