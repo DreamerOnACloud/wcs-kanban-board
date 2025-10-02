@@ -8,7 +8,8 @@
  *       cards: [
  *         {
  *           id: string,
- *           title: string
+ *           title: string,
+ *           description: string  // Optional card description
  *         }
  *       ]
  *     }
@@ -159,7 +160,8 @@ export class WcsKanbanBoard extends HTMLElement {
           cards: Array.from(list.shadowRoot.querySelectorAll('wcs-kanban-card'))
             .map(card => ({
               id: card.getAttribute('id') || generateId(),
-              title: card.getAttribute('title') || 'New Task'
+              title: card.getAttribute('title') || 'New Task',
+              description: card.getAttribute('description') || ''
             }))
         };
       });
@@ -231,6 +233,7 @@ export class WcsKanbanBoard extends HTMLElement {
               const card = document.createElement('wcs-kanban-card');
               card.setAttribute('id', cardData.id);
               card.setAttribute('title', cardData.title || 'New Task');
+              card.setAttribute('description', cardData.description || '');
               list.shadowRoot.querySelector('#cards').appendChild(card);
             });
           }

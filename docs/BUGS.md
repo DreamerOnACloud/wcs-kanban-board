@@ -2,6 +2,22 @@
 
 ## Active Issues
 
+### Modal Component
+
+- [ ] Modal buttons duplicate event handling
+  - **Description**: Modal save/close buttons sometimes trigger multiple times due to event bubbling through the modal content div
+  - **Impact**: Low - Functionally non-breaking as state updates are idempotent
+  - **Reproduction**:
+    1. Open any card to show the modal
+    2. Click Save or Close button
+    3. Observe multiple console logs for close events
+  - **Root Cause**:
+    - Event listener on `.modal` div catches bubbled events
+    - Both the button and container trigger the same handler
+  - **Status**: In Progress
+  - **Workaround**: Events are idempotent, so no user impact
+  - **Component**: `wcs-kanban-modal.js`
+
 ### Data Persistence
 
 - [x] ~~Task title changes don't always persist~~ *(Fixed)*

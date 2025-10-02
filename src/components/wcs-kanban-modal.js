@@ -2,6 +2,14 @@ export class WcsKanbanModal extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    
+    // Setup keyboard handler
+    this.handleKeyboard = (e) => {
+      if (e.key === 'Escape') {
+        this.close();
+      }
+    };
+
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -18,26 +26,88 @@ export class WcsKanbanModal extends HTMLElement {
           border-radius: 8px;
           width: 300px;
         }
+
+        .textarea-description {
+          width: 100%;
+          height: 100px;
+          margin-top: 0.5rem;
+          margin-bottom: 0.5rem;
+          padding: 0.5rem;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 1rem;
+          resize: vertical;
+        }
+        .btn-save, .btn-close {
+          padding: 0.5rem 1rem;
+          margin-right: 0.5rem;
+          cursor: pointer;
+          border: none;
+          border-radius: 4px;
+        }
+
+        .btn-save {
+          background: #28a745;
+          color: white;
+        }
+        .btn-close {
+          background: #dc3545;
+          color: white;
+        }
+
+        .modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 1rem;
+          gap: 0.5rem;
+          text-align: right;
+        }
       </style>
       <div class="modal">
         <slot></slot>
-        <button id="close">Close</button>
+        <textarea class="textarea-description" placeholder="Enter card description..."></textarea>
+        <div class="modal-actions">
+          <button class="btn-save">Save</button>
+          <button class="btn-close">Close</button>
+        </div>
       </div>
     `;
   }
 
   connectedCallback() {
-    this.shadowRoot.querySelector('#close').addEventListener('click', () => {
-      this.style.display = 'none';
+    // Handle button clicks
+    this.shadowRoot.querySelector('.modal').addEventListener('click', (e) => {
+      if (e.target.classList.contains('btn-close')) {
+        this.close();
+      } else if (e.target.classList.contains('btn-save')) {
+        const description = this.shadowRoot.querySelector('.textarea-description').value;
+        this.dispatchEvent(new CustomEvent('save', { detail: { description } }));
+        this.close();
+      }
     });
   }
 
-  open() {
+  getDescription() {
+    return this.shadowRoot.querySelector('.textarea-description').value;
+  }
+
+  setDescription(value) {
+    this.shadowRoot.querySelector('.textarea-description').value = value || '';
+  }
+
+  open(description) {
+    this.setDescription(description);
     this.style.display = 'flex';
+    // Add keyboard listener when modal opens
+    document.addEventListener('keydown', this.handleKeyboard);
   }
 
   close() {
+    console.log('Modal close method called');
+    this.setDescription('');
     this.style.display = 'none';
+    // Remove keyboard listener when modal closes
+    document.removeEventListener('keydown', this.handleKeyboard);
   }
 }
 
