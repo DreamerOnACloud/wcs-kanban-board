@@ -4,6 +4,8 @@
  * - Set drag data and effects: Using dataTransfer API
  * - Animation and opacity during drag: Using CSS transitions
  */
+import { debugLog, findParentBoard } from '../utils.js';
+
 export class WcsKanbanCard extends HTMLElement {
   constructor() {
     super();
@@ -93,12 +95,32 @@ export class WcsKanbanCard extends HTMLElement {
       const titleElement = this.shadowRoot.querySelector('.card-title');
       
       titleElement.addEventListener('blur', () => {
-        const newTitle = titleElement.textContent.trim();
-        if (newTitle) {
+        const oldTitle = this.getAttribute('title');
+        const newTitle = titleElement.textContent.trim() || 'New Task';
+        
+        debugLog('Card title change:', {
+          id: this.getAttribute('id'),
+          oldTitle,
+          newTitle
+        });
+        
+        // Update title if changed
+        if (oldTitle !== newTitle) {
+          // Update DOM and attributes
           this.setAttribute('title', newTitle);
-          this.notifyStateChange();
-        } else {
-          titleElement.textContent = this.getAttribute('title') || 'New Task';
+          titleElement.textContent = newTitle;
+          
+          // Queue state save after DOM updates are complete
+          requestAnimationFrame(() => {
+            debugLog('Saving state after title change:', {
+              id: this.getAttribute('id'),
+              title: newTitle
+            });
+            this.notifyStateChange();
+          });
+        } else if (!newTitle) {
+          // Restore title if empty
+          titleElement.textContent = oldTitle || 'New Task';
         }
       });
 
@@ -124,10 +146,21 @@ export class WcsKanbanCard extends HTMLElement {
   }
 
   notifyStateChange() {
+    debugLog('Card state change:', {
+      id: this.getAttribute('id'),
+      title: this.getAttribute('title')
+    });
+    
     // Find parent board and trigger state save
-    const board = this.closest('wcs-kanban-board');
-    if (board && board.saveState) {
-      requestAnimationFrame(() => board.saveState()); // Delay save to ensure DOM is updated
+    const board = findParentBoard(this);
+    if (board) {
+      // Ensure DOM is updated before saving
+      requestAnimationFrame(() => {
+        debugLog('Saving board state after card update');
+        board.saveState();
+      });
+    } else {
+      console.error('Could not find parent board for card:', this.getAttribute('id'));
     }
   }
 }

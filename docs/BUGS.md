@@ -4,13 +4,19 @@
 
 ### Data Persistence
 
-- [ ] Task title changes don't always persist
-  - **Description**: Title updates for tasks (cards) are inconsistently saved to localStorage
-  - **Impact**: Medium - User data could be lost on page refresh
-  - **Possible Causes**:
-    - State update not triggered for card title changes
-    - Race condition in save operations
-    - Card component not properly notifying parent list/board
+- [x] ~~Task title changes don't always persist~~ *(Fixed)*
+  - **Description**: ~~Title updates for tasks (cards) are inconsistently saved to localStorage~~
+  - **Impact**: ~~Medium - User data could be lost on page refresh~~
+  - **Reproduction**: *(No longer reproducible)*
+    1. ~~Add a new card to any list~~
+    2. ~~Edit the card's title~~
+    3. ~~Refresh the page -> Title change is lost~~
+    4. ~~However: If you drag-drop the card after editing its title, then refresh -> Title change persists~~
+  - ~~**Root Cause**~~:
+    - ~~Card component not notifying parent list/board of title changes~~
+    - ~~State save only happens on drag-drop and list-level changes~~
+    - ~~Missing state change propagation from card to board~~
+  - **Resolution**: Fixed by implementing proper DOM update sequence and state change propagation
 
 ### UI/UX Issues
 
@@ -34,4 +40,13 @@
 
 ## Recently Fixed
 
-No bugs have been fixed yet. This section will be updated as bugs are resolved.
+### Fixed: Card Title Persistence
+
+- [x] Task title changes not persisting consistently
+  - **Issue**: Card title updates were lost on page refresh unless the card was dragged
+  - **Fix**: Added proper DOM update sequence with requestAnimationFrame
+  - **Details**: 
+    - Ensure DOM updates complete before state saves
+    - Use findParentBoard utility for reliable board lookup
+    - Added debug logging for better state change tracking
+  - **Fixed in**: October 2, 2025
