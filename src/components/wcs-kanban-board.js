@@ -128,30 +128,56 @@ export class WcsKanbanBoard extends HTMLElement {
    */
   saveState() {
     try {
-      debugLog('Saving board state');
+      debugLog('Starting state save', {
+        containerChildren: this.shadowRoot.querySelector('#lists').children.length,
+        existingLists: Array.from(this.shadowRoot.querySelector('#lists').children)
+          .filter(el => el.tagName.toLowerCase() === 'wcs-kanban-list')
+          .map(list => ({
+            id: list.getAttribute('id'),
+            title: list.getAttribute('title')
+          }))
+      });
       
-      // Get current lists state
-      const lists = Array.from(this.shadowRoot.querySelector('#lists').children)
-        .filter(el => el.tagName.toLowerCase() === 'wcs-kanban-list')
-        .map(list => {
-          const titleElement = list.shadowRoot.querySelector('.list-title');
-          const currentTitle = titleElement?.textContent.trim() || 'New List';
-          
-          // Sync title attribute if needed
-          if (currentTitle !== list.getAttribute('title')) {
-            list.setAttribute('title', currentTitle);
-          }
-          
-          return {
-            id: list.getAttribute('id') || generateId(),
-            title: currentTitle,
-            cards: Array.from(list.shadowRoot.querySelectorAll('wcs-kanban-card'))
-              .map(card => ({
-                id: card.getAttribute('id') || generateId(),
-                title: card.getAttribute('title') || 'New Task'
-              }))
-          };
-        });
+      // Get current lists from DOM
+      const listsContainer = this.shadowRoot.querySelector('#lists');
+      const listElements = Array.from(listsContainer.children)
+        .filter(el => el.tagName.toLowerCase() === 'wcs-kanban-list');
+      
+      // Map to state structure
+      const lists = listElements.map(list => {
+        const titleElement = list.shadowRoot.querySelector('.list-title');
+        const currentTitle = titleElement?.textContent.trim() || 'New List';
+        
+        // Sync title attribute if needed
+        if (currentTitle !== list.getAttribute('title')) {
+          list.setAttribute('title', currentTitle);
+        }
+        
+        return {
+          id: list.getAttribute('id') || generateId(),
+          title: currentTitle,
+          cards: Array.from(list.shadowRoot.querySelectorAll('wcs-kanban-card'))
+            .map(card => ({
+              id: card.getAttribute('id') || generateId(),
+              title: card.getAttribute('title') || 'New Task'
+            }))
+        };
+      });
+      
+      debugLog('Building board state', {
+        listElements: listElements.length,
+        mappedLists: lists.length,
+        listIds: lists.map(l => l.id),
+        listTitles: lists.map(l => l.title),
+        cardCounts: lists.map(l => l.cards.length),
+        totalCards: lists.reduce((sum, l) => sum + l.cards.length, 0),
+        state: lists.map(l => ({
+          id: l.id,
+          title: l.title,
+          cardCount: l.cards.length,
+          cards: l.cards.map(c => ({ id: c.id, title: c.title }))
+        }))
+      });
       
       // Update and save state
       this.state = { lists };

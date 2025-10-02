@@ -20,13 +20,14 @@
 
 ### UI/UX Issues
 
-- [ ] List deletion ("×" button) non-functional
-  - **Description**: The "×" button in list headers doesn't trigger list removal
-  - **Impact**: High - Users cannot delete lists through UI
-  - **Possible Causes**:
-    - Event listener not properly attached
-    - Event not propagating through shadow DOM
-    - removeList method not being called
+- [x] ~~List deletion ("×" button) non-functional~~ *(Fixed)*
+  - **Description**: ~~The "×" button in list headers doesn't trigger list removal~~
+  - **Impact**: ~~High - Users cannot delete lists through UI~~
+  - ~~**Possible Causes**~~:
+    - ~~Event listener not properly attached~~
+    - ~~Event not propagating through shadow DOM~~
+    - ~~removeList method not being called~~
+  - **Resolution**: Fixed by using findParentBoard utility to properly traverse shadow DOM
 
 ## How to Report New Bugs
 
@@ -43,6 +44,17 @@
 ### Fixed: Card Title Persistence
 
 - [x] Task title changes not persisting consistently
+
+### Fixed: List Deletion
+
+- [x] List deletion button not working
+  - **Issue**: The "×" button in list headers wasn't triggering list removal
+  - **Fix**: Used findParentBoard utility for proper shadow DOM traversal
+  - **Details**: 
+    - Same root cause as card title persistence issue
+    - Updated event handler to properly find parent board
+    - Added debug logging for better troubleshooting
+  - **Fixed in**: October 2, 2025
   - **Issue**: Card title updates were lost on page refresh unless the card was dragged
   - **Fix**: Added proper DOM update sequence with requestAnimationFrame
   - **Details**: 

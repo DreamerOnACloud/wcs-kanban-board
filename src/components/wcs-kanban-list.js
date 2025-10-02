@@ -160,9 +160,21 @@ export class WcsKanbanList extends HTMLElement {
     this.shadowRoot
       .querySelector('.remove-list')
       .addEventListener('click', () => {
-        const board = this.closest('wcs-kanban-board');
-        if (board && board.removeList) {
+        debugLog('List remove button clicked:', {
+          listId: this.getAttribute('id'),
+          listTitle: this.getAttribute('title')
+        });
+
+        const board = findParentBoard(this);
+        if (board) {
+          debugLog('Found board, removing list', {
+            listId: this.getAttribute('id'),
+            listTitle: this.getAttribute('title'),
+            boardTag: board.tagName
+          });
           board.removeList(this);
+        } else {
+          console.error('Could not find parent board for list deletion');
         }
       });
       
