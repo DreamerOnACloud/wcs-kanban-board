@@ -75,15 +75,17 @@ export class WcsKanbanModal extends HTMLElement {
   }
 
   connectedCallback() {
-    // Handle button clicks
-    this.shadowRoot.querySelector('.modal').addEventListener('click', (e) => {
-      if (e.target.classList.contains('btn-close')) {
-        this.close();
-      } else if (e.target.classList.contains('btn-save')) {
-        const description = this.shadowRoot.querySelector('.textarea-description').value;
-        this.dispatchEvent(new CustomEvent('save', { detail: { description } }));
-        this.close();
-      }
+    // Handle button clicks directly without relying on event bubbling
+    this.shadowRoot.querySelector('.btn-close').addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent event from bubbling to modal
+      this.close();
+    });
+
+    this.shadowRoot.querySelector('.btn-save').addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent event from bubbling to modal
+      const description = this.shadowRoot.querySelector('.textarea-description').value;
+      this.dispatchEvent(new CustomEvent('save', { detail: { description } }));
+      this.close();
     });
   }
 
