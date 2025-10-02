@@ -14,11 +14,18 @@ export class WcsKanbanCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this._initialized = false;
+    this._pendingDescription = null;
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'description' && oldValue !== newValue) {
-      this.updateDescriptionPreview(newValue);
+      if (this._initialized) {
+        this.updateDescriptionPreview(newValue);
+      } else {
+        // Store description to apply after initialization
+        this._pendingDescription = newValue;
+      }
     }
   }
 
@@ -121,6 +128,13 @@ export class WcsKanbanCard extends HTMLElement {
     this.setupTitleEditing();
     this.setupModalHandling();
     this.setupRemoveButton();
+
+    // 5. Mark as initialized and handle any pending description
+    this._initialized = true;
+    if (this._pendingDescription !== null) {
+      this.updateDescriptionPreview(this._pendingDescription);
+      this._pendingDescription = null;
+    }
   }
 
   setupDragAndDrop() {
@@ -207,7 +221,14 @@ export class WcsKanbanCard extends HTMLElement {
   }
 
   updateDescriptionPreview(description) {
-    const previewEl = this.shadowRoot.querySelector('.card-description');
+    if (!this._initialized) {
+      this._pendingDescription = description;
+      return;
+    }
+
+    const previewEl = this.shadowRoot?.querySelector('.card-description');
+    if (!previewEl) return;
+
     if (description && description.trim()) {
       previewEl.textContent = description;
     } else {
@@ -218,8 +239,16 @@ export class WcsKanbanCard extends HTMLElement {
   setupRemoveButton() {
     this.shadowRoot.querySelector('.remove-card').addEventListener('click', (e) => {
       e.stopPropagation();
-      this.remove();
-      this.notifyStateChange();
+      // Notify state change before removing the element
+      const board = findParentBoard(this);
+      if (board) {
+        // First remove from DOM
+        this.remove();
+        // Then update state
+        requestAnimationFrame(() => {
+          board.saveState();
+        });
+      }
     });
   }
 

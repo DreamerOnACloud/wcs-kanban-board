@@ -57,6 +57,18 @@
 
 ## Recently Fixed
 
+### Fixed: Card Removal Persistence
+
+- [x] Deleted cards reappearing after page reload
+  - **Issue**: Removed cards would sometimes reappear when reloading the page
+  - **Root Cause**: `notifyStateChange` called after card removal from DOM, making it unable to find parent board
+  - **Fix**: Get parent board reference before removal and queue state update after DOM changes
+  - **Details**:
+    - Changed removal sequence in card component
+    - Find parent board before DOM removal
+    - Use requestAnimationFrame to ensure proper state update timing
+  - **Fixed in**: October 2, 2025
+
 ### Fixed: Card Title Persistence
 
 - [x] Task title changes not persisting consistently
