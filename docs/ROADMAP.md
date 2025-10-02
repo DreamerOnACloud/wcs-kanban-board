@@ -51,11 +51,36 @@
 
 - [ ] Card Details Modal
   - [ ] Description field
+    - [ ] Rich text editor integration
+    - [ ] Markdown support
+    - [ ] Auto-save functionality
   - [ ] Due date picker
+    - [ ] Calendar widget
+    - [ ] Date validation
+    - [ ] Overdue indicators
   - [ ] Tag system
+    - [ ] Custom tag creation
+    - [ ] Color selection
+    - [ ] Tag filtering
 - [ ] Responsive Design
   - [ ] Mobile-friendly layout
+    - [ ] Collapsible lists
+    - [ ] Touch-friendly spacing
+    - [ ] Responsive typography
   - [ ] Touch interactions
+    - [ ] Swipe gestures for cards
+    - [ ] Long-press for context menu
+    - [ ] Pinch-to-zoom board view
+- [ ] User Experience
+  - [ ] Loading states
+    - [ ] Skeleton loading for lists
+    - [ ] Progressive content load
+  - [ ] Error handling
+    - [ ] Friendly error messages
+    - [ ] Auto-recovery options
+  - [ ] Performance optimizations
+    - [ ] Lazy loading for cards
+    - [ ] State management improvements
 
 ## Future Ideas (Backlog)
 
